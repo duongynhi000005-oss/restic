@@ -342,6 +342,16 @@ func collectRejectByNameFuncs(opts BackupOptions, repo *repository.Repository, w
 		fs = append(fs, f)
 	}
 
+	// exclude active local restic repository
+	if repo.LocalPath() != "" {
+		f, err := rejectResticRepo(repo)
+		if err != nil {
+			return nil, err
+		}
+
+		fs = append(fs, f)
+	}
+
 	fsPatterns, err := opts.ExcludePatternOptions.CollectPatterns(warnf)
 	if err != nil {
 		return nil, err

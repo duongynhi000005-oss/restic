@@ -417,6 +417,42 @@ func TestBackupExclude(t *testing.T) {
 		"expected file %q not in first snapshot, but it's included", "passwords.txt")
 }
 
+func TestBackupExcludeLocalRepository(t *testing.T) {
+	env, cleanup := withTestEnvironment(t)
+	defer cleanup()
+
+	// Place the active local repository inside the directory being backed up,
+	// alongside normal files and another directory with the same base name.
+	env.repo = filepath.Join(env.testdata, "my-repo")
+	env.gopts.Repo = env.repo
+	testRunInit(t, env.gopts)
+
+	regularFile := filepath.Join(env.testdata, "hello.txt")
+	rtest.OK(t, os.WriteFile(regularFile, []byte("hello world"), 0o600))
+
+	sameNameOtherDir := filepath.Join(env.testdata, "sub", "my-repo", "keep.txt")
+	rtest.OK(t, os.MkdirAll(filepath.Dir(sameNameOtherDir), 0o755))
+	rtest.OK(t, os.WriteFile(sameNameOtherDir, []byte("keep me"), 0o600))
+
+	// Use a relative repository path (`./my-repo`) while backing up `.` from env.testdata.
+	relGopts := env.gopts
+	relGopts.Repo = "./my-repo"
+	testRunBackup(t, env.testdata, []string{"."}, BackupOptions{}, relGopts)
+
+	snapshots := make(map[string]struct{})
+	_, snapshotID := lastSnapshot(snapshots, loadSnapshotMap(t, env.gopts))
+	files := testRunLs(t, env.gopts, snapshotID)
+
+	rtest.Assert(t, includes(files, "/hello.txt"),
+		"expected /hello.txt in snapshot, got %v", files)
+	rtest.Assert(t, includes(files, "/sub/my-repo/keep.txt"),
+		"expected /sub/my-repo/keep.txt in snapshot, got %v", files)
+	for _, f := range files {
+		rtest.Assert(t, f != "/my-repo" && !strings.HasPrefix(f, "/my-repo/"),
+			"expected active local repository /my-repo to be excluded, found %q in %v", f, files)
+	}
+}
+
 func TestBackupErrors(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		return

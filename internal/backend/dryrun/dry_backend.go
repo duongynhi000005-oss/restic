@@ -27,6 +27,10 @@ func New(be backend.Backend) *Backend {
 	return b
 }
 
+func (be *Backend) Unwrap() backend.Backend {
+	return be.b
+}
+
 // Save adds new Data to the backend.
 func (be *Backend) Save(_ context.Context, h backend.Handle, _ backend.RewindReader) error {
 	if err := h.Valid(); err != nil {

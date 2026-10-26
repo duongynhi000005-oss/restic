@@ -68,6 +68,10 @@ func newOrderedListOnceBackend(be backend.Backend) *listOnceBackend {
 	}
 }
 
+func (be *listOnceBackend) Unwrap() backend.Backend {
+	return be.Backend
+}
+
 func (be *listOnceBackend) List(ctx context.Context, t backend.FileType, fn func(backend.FileInfo) error) error {
 	if t != backend.LockFile && be.listedFileType[t] {
 		return errors.Errorf("tried listing type %v the second time", t)

@@ -176,6 +176,19 @@ func (r *Repository) Cache() *cache.Cache {
 	return r.cache
 }
 
+// LocalPath returns the path to the local repository directory if the
+// underlying backend is a local backend, or an empty string otherwise.
+func (r *Repository) LocalPath() string {
+	type localPathBackend interface {
+		backend.Backend
+		LocalPath() string
+	}
+	if be := backend.AsBackend[localPathBackend](r.be); be != nil {
+		return be.LocalPath()
+	}
+	return ""
+}
+
 // SetDryRun sets the repo backend into dry-run mode.
 func (r *Repository) SetDryRun() {
 	r.be = dryrun.New(r.be)

@@ -84,6 +84,11 @@ func Create(_ context.Context, cfg Config, _ func(string, ...any)) (*Local, erro
 	return be, nil
 }
 
+// LocalPath returns the path to the local repository directory.
+func (b *Local) LocalPath() string {
+	return b.Path
+}
+
 func (b *Local) Properties() backend.Properties {
 	return backend.Properties{
 		Connections:      b.Config.Connections,
