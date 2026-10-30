@@ -515,6 +515,9 @@ func (be *s3) getWarmupStatus(objectInfo minio.ObjectInfo) warmupStatus {
 	// The response header is the documented way to get the storage class
 	// for GetObject/StatObject operations.
 	storageClass := objectInfo.Metadata.Get("X-Amz-Storage-Class")
+	if storageClass == "" {
+		storageClass = objectInfo.StorageClass
+	}
 	isArchiveClass := slices.Contains(archiveClasses, storageClass)
 	if !isArchiveClass {
 		return warmupStatusWarm
