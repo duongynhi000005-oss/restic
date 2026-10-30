@@ -391,9 +391,9 @@ func gatherIncludeFilters(includeByNameFuncs []filter.IncludeByNameFunc, printer
 
 	inSelectByNameDir := func(nodepath string) bool {
 		for _, include := range includeByNameFuncs {
-			matched, _ := include(nodepath)
-			if matched {
-				return matched
+			matched, childMayMatch := include(nodepath)
+			if matched || childMayMatch {
+				return true
 			}
 		}
 		return false
